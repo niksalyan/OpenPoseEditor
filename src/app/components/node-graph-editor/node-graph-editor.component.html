@@ -1,0 +1,107 @@
+<svg width="100%" height="100%"
+     #itemEditor
+     (mousedown)="onMouseDown($event)"
+     (mouseup)="onMouseUp($event)"
+     (mouseover)="viewport.mouse.active = true;"
+     (mouseleave)="onMouseUp($event);viewport.mouse.active = false;"
+     (mousewheel)="onMouseWheel($event);"
+     (mousemove)="onMouseMove($event, itemEditor)" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="gray" stroke-width="0.5"/>
+        </pattern>
+        <pattern id="grid" [attr.x]="viewport.x / viewport.zoom" [attr.y]="viewport.y / viewport.zoom" [attr.patternTransform]="'scale(' + viewport.zoom + ')'" width="100" height="100" patternUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="url(#smallGrid)"/>
+            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="gray" stroke-width="1"/>
+        </pattern>
+    </defs>
+
+    <filter id="shadow">
+        <feDropShadow
+                dx="2"
+                dy="2"
+                stdDeviation="2"
+                floodColor="#000"
+                floodOpacity="0.1"
+        ></feDropShadow>
+    </filter>
+
+    <rect width="100%" height="100%" fill="url(#grid)" />
+
+    <g [attr.transform]="viewport.transform" filter="url(#shadow)">
+
+        <path *ngFor="let connection of viewport.connections"
+              [attr.d]="connection.path"
+              class="connection-shadow"
+        />
+
+        <path *ngFor="let connection of viewport.connections"
+              [attr.d]="connection.path"
+              [attr.stroke]="connection.data.color"
+              class="connection"
+              [ngClass]="{selected: connection === viewport.selectedObject}"
+              (mousedown)="viewport.drag(connection);viewport.select(connection);$event.stopPropagation();"
+              (dblclick)="viewport.edit(connection);$event.stopPropagation();"
+        />
+
+        <ng-container *ngFor="let connection of viewport.connections">
+            <circle
+                    *ngIf="connection.data.adjustPath && connection.data.rectPath"
+                    [attr.cx]="connection.midX"
+                    [attr.cy]="connection.midY"
+                    class="connection connection-{{connection.type}}"
+                    (mousedown)="viewport.drag(connection.offset);$event.stopPropagation();"
+                    r="3"
+            />
+        </ng-container>
+
+
+        <line *ngIf="viewport.creatingConnection && viewport.mouse.active"
+              [attr.x1]="viewport.mouse.x"
+              [attr.y1]="viewport.mouse.y"
+              [attr.x2]="viewport.creatingConnection.source.midX"
+              [attr.y2]="viewport.creatingConnection.source.midY"
+              class="connecting" />
+
+        <!--<rect *ngFor="let item of viewport.items"
+              [ngClass]="{selected: item === viewport.selectedObject, 'item-connecting': viewport.connectingObject}"
+              [attr.x]="item.x"
+              [attr.y]="item.y"
+              rx="5" ry="5"
+              [attr.width]="item.width"
+              [attr.height]="item.height"
+              (mousedown)="viewport.drag(item);viewport.select(item);$event.stopPropagation();"
+              (dblclick)="viewport.edit(item);$event.stopPropagation();"
+              class="item item-{{item.type}}">
+        </rect>-->
+
+        <!--<rect *ngFor="let item of viewport.items"
+              [attr.x]="item.x + item.width - 10"
+              [attr.y]="item.y + item.height - 10"
+              [attr.width]="20"
+              [attr.height]="20"
+              (mousedown)="viewport.drag(item.size);$event.stopPropagation();"
+              class="item-resize">
+        </rect>-->
+
+        <!--<foreignObject *ngFor="let item of viewport.items" [attr.x]="item.x + 5" [attr.y]="item.midY - 10" [attr.width]="item.width - 10" [attr.height]="20" (mousemove)="viewport.mouse.active = false" (mouseleave)="viewport.mouse.active = true">
+            <div class="item-name" xmlns="http://www.w3.org/1999/xhtml">
+                <input [(ngModel)]="item.name" />
+            </div>
+        </foreignObject>-->
+
+        <circle *ngFor="let item of viewport.items"
+                r="6"
+                [attr.fill]="item.data.color"
+                [attr.cx]="item.midX"
+                [attr.cy]="item.midY"
+                class="item item-{{item.type}}"
+                (mousedown)="viewport.drag(item);viewport.select(item);$event.stopPropagation();"
+        ></circle>
+
+        <!--
+        <circle [attr.cx]="viewport.mouse.x" [attr.cy]="viewport.mouse.y" r="5" fill="red"></circle>
+        -->
+
+    </g>
+</svg>
